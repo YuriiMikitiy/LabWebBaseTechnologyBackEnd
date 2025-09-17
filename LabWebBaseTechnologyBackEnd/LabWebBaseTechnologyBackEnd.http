@@ -1,0 +1,6 @@
+@LabWebBaseTechnologyBackEnd_HostAddress = http://localhost:5154
+
+GET {{LabWebBaseTechnologyBackEnd_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
