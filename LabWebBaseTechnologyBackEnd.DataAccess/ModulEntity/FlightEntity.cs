@@ -3,6 +3,7 @@ namespace LabWebBaseTechnologyBackEnd.DataAccess.ModulEntity;
 public class FlightEntity
 {
     public Guid Id { get; set; }
+    public string FlightNumber { get; set; } = string.Empty; // Додано нове поле
     public string From { get; set; } = string.Empty;
     public string To { get; set; } = string.Empty;
     public string Time { get; set; } = string.Empty;
