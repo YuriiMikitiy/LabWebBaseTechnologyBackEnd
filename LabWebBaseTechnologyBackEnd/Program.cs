@@ -74,6 +74,12 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
+
 var app = builder.Build();
 
 
@@ -96,12 +102,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<LabWebBaseTechnologyDBContext>();
-    context.Database.Migrate(); // Застосовує всі міграції
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var context = services.GetRequiredService<LabWebBaseTechnologyDBContext>();
+//    context.Database.Migrate(); // Застосовує всі міграції
+//}
 
 app.Run();
 

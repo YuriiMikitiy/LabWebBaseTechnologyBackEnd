@@ -12,11 +12,13 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
     {
         private readonly IFlightRepository _flightRepository;
         private readonly LabWebBaseTechnologyDBContext _context;
+        private readonly ILogger<FlightController> _logger;
 
-        public FlightController(IFlightRepository flightRepository, LabWebBaseTechnologyDBContext dBContext)
+        public FlightController(IFlightRepository flightRepository, LabWebBaseTechnologyDBContext dBContext, ILogger<FlightController> logger)
         {
             _flightRepository = flightRepository;
             _context = dBContext;
+            _logger = logger;
         }
 
         //[HttpGet]
@@ -29,12 +31,14 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FlightEntity>>> GetFlights()
         {
+            _logger.LogInformation("Fetching all flights at {Time}", DateTime.UtcNow);
             return await _context.Flights.ToListAsync();
         }
 
         [HttpGet("data")]
         public async Task<ActionResult<object>> GetTrainingData()
         {
+            _logger.LogInformation("Fetching training data at {Time}", DateTime.UtcNow);
             var flights = await _context.Flights
                 .Include(f => f.DelayData)
                 .ToListAsync();
@@ -45,6 +49,8 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
                 DelayProbability = f.DelayData.FirstOrDefault()?.DelayProbability ?? 0.0,
                 Status = f.Status
             }).ToList();
+
+            _logger.LogInformation("Fetched {Count} training records", data.Count);
 
             return Ok(data);
         }

@@ -13,25 +13,34 @@ namespace AirportApi.Controllers
         private readonly LabWebBaseTechnologyDBContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ChatController> _logger;
 
-        public ChatController(LabWebBaseTechnologyDBContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public ChatController(LabWebBaseTechnologyDBContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory, ILogger<ChatController> logger)
         {
             _context = context;
             _configuration = configuration;
             _httpClient = httpClientFactory.CreateClient();
+            _logger = logger;
         }
 
         [HttpPost]
         public async Task<ActionResult<object>> PostChat([FromBody] ChatRequest request)
         {
             if (string.IsNullOrEmpty(request?.Message))
+            {
+                _logger.LogWarning("Chat request failed: empty message.");
                 return BadRequest("Message is required");
+            }
+
+            _logger.LogInformation("Received chat request: {Message}", request.Message);
 
             // Отримання актуальних даних із БД (обмеження до 10 рейсів)
             var flights = await _context.Flights
                 .Include(f => f.DelayData)
                 .Take(10)
                 .ToListAsync();
+
+            _logger.LogInformation("Loaded {Count} flights for chat processing", flights.Count);
 
             var flightData = flights.Select(f => new
             {
@@ -71,10 +80,12 @@ namespace AirportApi.Controllers
 
             try
             {
+                _logger.LogInformation("Sending request to Gemini API...");
                 var response = await _httpClient.PostAsync(url, httpContent);
                 if (!response.IsSuccessStatusCode)
                 {
                     var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Gemini API error: {Error}", error);
                     return StatusCode((int)response.StatusCode, $"Error calling Gemini API: {error}");
                 }
 
@@ -97,14 +108,18 @@ namespace AirportApi.Controllers
                     }
                 }
 
+                _logger.LogInformation("Gemini response received successfully.");
+
                 return Ok(new { response = aiText });
             }
             catch (JsonException ex)
             {
+                _logger.LogError(ex, "Error parsing Gemini response.");
                 return StatusCode(500, $"Error parsing Gemini response: {ex.Message}");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Internal server error in ChatController.");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }

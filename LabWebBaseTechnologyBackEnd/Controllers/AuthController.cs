@@ -18,16 +18,20 @@ namespace AirportApi.Controllers
     {
         private readonly LabWebBaseTechnologyDBContext _context;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(LabWebBaseTechnologyDBContext context, IConfiguration configuration)
+        public AuthController(LabWebBaseTechnologyDBContext context, IConfiguration configuration, ILogger<AuthController> logger)
         {
             _context = context;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] UserRegistration request)
         {
+            _logger.LogInformation("Attempt to register user with email {Email}", request.Email);
+
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest("Email already exists.");
 
@@ -43,17 +47,27 @@ namespace AirportApi.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("User {Email} registered successfully", request.Email);
+
             return Ok(new { message = "User registered successfully." });
         }
 
         [HttpPost("login")]
         public async Task<ActionResult> Login([FromBody] UserLogin request)
         {
+            _logger.LogInformation("Login attempt for {Email}", request.Email);
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                _logger.LogWarning("Login failed for {Email}", request.Email);
+
                 return Unauthorized("Invalid email or password.");
+            }
 
             var token = GenerateJwtToken(user);
+
+            _logger.LogInformation("User {Email} logged in successfully", request.Email);
             return Ok(new { token });
         }
 
