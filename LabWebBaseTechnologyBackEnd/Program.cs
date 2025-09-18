@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Vite default port for React
+        policy.WithOrigins("http://localhost:5173", "https://labwebbasetechnologyfrontend.onrender.com") // Vite default port for React
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
