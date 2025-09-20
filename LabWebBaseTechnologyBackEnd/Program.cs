@@ -40,6 +40,7 @@ builder.Services.AddDbContext<LabWebBaseTechnologyDBContext>(
     });
 
 
+
 // Enable CORS for React frontend (adjust origin if needed)
 builder.Services.AddCors(options =>
 {
@@ -82,6 +83,11 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
+app.Use((context, next) =>
+{
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-eval' https://m.stripe.network https://js.stripe.com 'sha256-MqH8JJslY2fF2bGYY1rZlpCNrRCnWKRzrrDefixUJTI=' 'sha256-ZswfTY7H35rbv8WC7NXBoiC7WNu86vSzCDChNWwZZDM='; connect-src 'self' https://api.stripe.com https://labwebbasetechnologybackend.onrender.com; style-src 'self' 'unsafe-inline' https://m.stripe.network; frame-src 'self' https://js.stripe.com;");
+    return next();
+});
 
 
 // Configure the HTTP request pipeline.
