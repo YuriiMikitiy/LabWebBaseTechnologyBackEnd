@@ -15,6 +15,7 @@ namespace AirportApi.Controllers
         public GraphQLController(IHttpClientFactory httpClientFactory, ILogger<GraphQLController> logger)
         {
             _httpClient = httpClientFactory.CreateClient();
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "AirportApp/1.0 (contact: yurii.mykytii-ip221@nung.edu.ua)"); // Додано User-Agent
             _logger = logger;
         }
 
