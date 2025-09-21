@@ -41,19 +41,29 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
         public async Task<ActionResult> GetWeather(string city)
         {
             _logger.LogInformation("Fetching weather for city: {City} at {Time}", city, DateTime.UtcNow);
+
+            if (_cache.TryGetValue(city, out object cachedWeather))
+            {
+                _logger.LogInformation("Returning cached weather for {City}", city);
+                return Ok(cachedWeather);
+            }
+
             var apiKey = _configuration["OpenWeatherApiKey"];
             var url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}&units=metric&lang=uk";
+
             try
             {
                 var response = await _httpClient.GetStringAsync(url);
                 var weatherData = JsonSerializer.Deserialize<JsonElement>(response);
+
                 var temperature = weatherData.GetProperty("main").GetProperty("temp").GetDouble();
                 var description = weatherData.GetProperty("weather")[0].GetProperty("description").GetString();
 
-                // Оновлення статусу рейсів на основі погоди (приклад)
+                // Оновлення статусу рейсів
                 var flights = await _context.Flights
                     .Where(f => f.From.ToLower() == city.ToLower())
                     .ToListAsync();
+
                 foreach (var flight in flights)
                 {
                     if (temperature < 0 || description?.Contains("rain") == true)
@@ -64,7 +74,12 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return Ok(new { temperature, description });
+                var result = new { temperature, description };
+
+                // Кладемо в кеш на 5 хв
+                _cache.Set(city, result, TimeSpan.FromMinutes(5));
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -72,6 +87,7 @@ namespace LabWebBaseTechnologyBackEnd.Controllers
                 return StatusCode(500, $"Error fetching weather: {ex.Message}");
             }
         }
+
 
 
         [HttpGet]
