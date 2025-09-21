@@ -1,6 +1,7 @@
 using LabWebBaseTechnologyBackEnd.DataAccess;
 using LabWebBaseTechnologyBackEnd.DataAccess.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -39,6 +40,17 @@ builder.Services.AddDbContext<LabWebBaseTechnologyDBContext>(
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));     //For MSSQL
     });
 
+
+// Конфігурація Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 100; // Максимум 100 запитів
+        opt.Window = TimeSpan.FromSeconds(60); // За хвилину
+        opt.QueueLimit = 20; // Обмеження черги
+    });
+});
 
 // Enable CORS for React frontend (adjust origin if needed)
 builder.Services.AddCors(options =>
@@ -99,7 +111,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseRateLimiter(); // Активуємо Rate Limiting
 app.MapControllers();
 
 //using (var scope = app.Services.CreateScope())
