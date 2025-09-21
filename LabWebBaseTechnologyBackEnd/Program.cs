@@ -83,6 +83,8 @@ builder.Services.AddAuthorization();
 
 // Add HttpClient for Gemini API
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+
 
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 
