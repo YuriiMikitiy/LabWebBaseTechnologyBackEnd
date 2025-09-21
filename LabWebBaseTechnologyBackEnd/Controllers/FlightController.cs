@@ -21,7 +21,7 @@ namespace AirportApi.Controllers
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
 
-        public FlightController(LabWebBaseTechnologyDBContext context, IHttpClientFactory httpClientFactory, ILogger<FlightsController> logger, IMemoryCache cache, IConfiguration configuration)
+        public FlightController(LabWebBaseTechnologyDBContext context, IHttpClientFactory httpClientFactory, ILogger<FlightController> logger, IMemoryCache cache, IConfiguration configuration)
         {
             _context = context;
             _httpClient = httpClientFactory.CreateClient();
