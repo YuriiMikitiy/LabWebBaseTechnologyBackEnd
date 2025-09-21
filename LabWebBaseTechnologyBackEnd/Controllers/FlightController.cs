@@ -74,6 +74,26 @@ namespace AirportApi.Controllers
             return flight;
         }
 
+        [HttpGet("data")]
+        public async Task<ActionResult<object>> GetTrainingData()
+        {
+            _logger.LogInformation("Fetching training data at {Time}", DateTime.UtcNow);
+            var flights = await _context.Flights
+                .Include(f => f.DelayData)
+                .ToListAsync();
+
+            var data = flights.Select(f => new
+            {
+                Weather = f.DelayData.FirstOrDefault()?.Weather ?? "Clear",
+                DelayProbability = f.DelayData.FirstOrDefault()?.DelayProbability ?? 0.0,
+                Status = f.Status
+            }).ToList();
+
+            _logger.LogInformation("Fetched {Count} training records", data.Count);
+
+            return Ok(data);
+        }
+
         [HttpGet("weather/{city}")]
         public async Task<ActionResult> GetWeather(string city)
         {
